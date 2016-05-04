@@ -1,0 +1,69 @@
+#! C:/Program Files/Nuke9.0v7/nuke-9.0.7.dll -nx
+version 9.0 v7
+Gizmo {
+ inputs 0
+ addUserKnob {20 User}
+ addUserKnob {22 ChangeProject T "import nuke, os\nimport PhotoScan\n    \ndef main():    \n    ##################Load Project############\n    psxFilePath = nuke.getFilename('Load psx project', '*.psx')\n    chunkroot, frameroot = PhotoScan.readProjectFiles(psxFilePath)\n    chunksensors = chunkroot.find('sensors')\n    chunkcameras = chunkroot.find('cameras')\n    framecameras = frameroot.find('cameras')\n    ##########################################\n    \n    #################Clean Group##############\n    GroupNode = nuke.thisGroup()\n    GroupNode.begin()\n    PhotoScan.clearScene()\n    ##########################################\n            \n    ##################Create Scene############\n    PhotoScan.deselectAll()\n    SceneNode = nuke.createNode('Scene')\n    SceneNode.setName(psxFilePath.rsplit('/',1)\[1].rsplit('.',1)\[0])\n    for node in GroupNode.nodes():\n        if node.Class() in \['Light', 'ReadGeo', 'ReadGeo2']:\n            SceneNode.setInput(SceneNode.inputs(), node)\n    ViewerNode = GroupNode.node('PhotoScanViewer')\n    ViewerNode.setInput(0, SceneNode)\n    CameraNames = \[]\n    ##########################################\n    \n    LastMergeNode = GroupNode.node('BaseColor')\n    AutoAlignList = \[]\n    for chunkcamera in chunkcameras.findall('camera'):\n        cameramatrix = chunkcamera.findtext('transform')\n        \n        if cameramatrix == None:\n            cameramatrix = '1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1'\n        CameraNode = PhotoScan.createCameraFromMatrix(cameramatrix)\n        CameraNames.append(CameraNode.name())\n        PhotoScan.transformFromMatrix(CameraNode, SetScale = True)\n        \n        \n        \n        sensorid = chunkcamera.attrib\['sensor_id']\n        for chunksensor in chunksensors.findall('sensor'):\n            if chunksensor.attrib\['id'] == sensorid:\n                break\n                \n        CameraFocalLength = 10.0\n        for property in chunksensor.findall('property'):\n            if property.attrib\['name'] == 'focal_length':\n                CameraFocalLength = float(property.attrib\['value'])\n                break\n        CameraNode\['focal'].setValue(CameraFocalLength)\n        \n        \n        PixelWidth = None\n        ResolutionWidth = None\n        for property in chunksensor.findall('property'):\n            if property.attrib\['name'] == 'pixel_width':\n                PixelWidth = float(property.attrib\['value'])\n                break\n        for property in chunksensor.findall('resolution'):\n            ResolutionWidth = float(property.attrib\['width'])\n        if PixelWidth != None and ResolutionWidth != None:\n            CameraNode\['haperture'].setValue(ResolutionWidth*PixelWidth)\n        \n        \n        \n        ReadNode = PhotoScan.createReadNode(chunkcamera.attrib\['id'], framecameras)\n        ProjectNode, MergeNode = PhotoScan.createProject3D(CameraNode, ReadNode, LastMergeNode)\n        LastMergeNode = MergeNode\n        \n        AutoAlignList.append(CameraNode)\n        AutoAlignList.append(ReadNode)\n        AutoAlignList.append(ProjectNode)\n        AutoAlignList.append(MergeNode)\n        \n    for a in AutoAlignList:\n        a.autoplace()\n    TextureOutputNode = GroupNode.node('TextureOutput')\n    TextureOutputNode.setInput(0, LastMergeNode)\n    GroupNode\['cameras'].setValues(CameraNames)\n    GroupNode.end()\n    GroupNode.showControlPanel(True)\n    nuke.showDag(GroupNode)\nmain()\n    " +STARTLINE}
+ addUserKnob {22 ClearScene -STARTLINE T "import PhotoScan\nPhotoScan.clearScene()"}
+ addUserKnob {26 ""}
+ addUserKnob {22 AddGlobalTransform -STARTLINE +DISABLED T "AxisNode = nuke.thisGroup().node('GlobalTransform')\nfor knob in AxisNode.knobs():\n    try:\n        AxisNode\[knob].setValue(AxisNode\[knob].defaultValue())\n    except:\n        pass\nfor CameraNode in nuke.thisGroup().nodes():\n    if 'Camera' in CameraNode.name():\n        matrixvalue = CameraNode.knob('world_matrix').getValueAt(nuke.frame())\n        CameraNode\['useMatrix'].setValue(True)\n        CameraNode\['matrix'].setValue(matrixvalue)\n        CameraNode.setInput(0, AxisNode)\nnuke.thisGroup()\['AddGlobalTransform'].setEnabled(False)\nnuke.thisGroup()\['BakeGlobalTransform'].setEnabled(True)\nAxisNode.showControlPanel()\n        "}
+ addUserKnob {22 BakeGlobalTransform -STARTLINE T "import PhotoScan\nAxisNode = nuke.thisGroup().node('GlobalTransform')\nfor CameraNode in nuke.thisGroup().nodes():\n    if 'Camera' in CameraNode.name():\n        matrixvalue = CameraNode.knob('world_matrix').getValueAt(nuke.frame())\n        CameraNode.setInput(0, None)\n        CameraNode\['matrix'].setValue(matrixvalue)\n        PhotoScan.transformFromMatrix(CameraNode)\nnuke.thisGroup()\['AddGlobalTransform'].setEnabled(True)\nnuke.thisGroup()\['BakeGlobalTransform'].setEnabled(False)\n"}
+ addUserKnob {26 ""}
+ addUserKnob {6 isolated -STARTLINE +HIDDEN}
+ isolated true
+ addUserKnob {4 cameras M {Camera1 Camera2 Camera3 Camera4 Camera5 Camera6 Camera7 Camera8 Camera9 Camera10 Camera11 Camera12 Camera13 Camera14 Camera15 Camera16 Camera17 Camera18 Camera19 Camera20 Camera21 Camera22 Camera23 Camera24 Camera25 Camera26 Camera27 Camera28 Camera29 Camera30 Camera31 Camera32 Camera33 Camera34 Camera35 Camera36 Camera37 Camera38 Camera39 Camera40 Camera41 Camera42 Camera43 Camera44 Camera45 Camera46 Camera47 Camera48 Camera49 Camera50 Camera51 Camera52 Camera53 Camera54 Camera55 Camera56 Camera57 Camera58 Camera59 Camera60 Camera61 Camera62 Camera63 Camera64 Camera65 Camera66 Camera67 Camera68 Camera69 Camera70 Camera71 Camera72 Camera73 Camera74 Camera75 Camera76 Camera77 Camera78 Camera79 Camera80 Camera81 Camera82 Camera83 Camera84 Camera85 Camera86 Camera87 Camera88 Camera89 Camera90 Camera91 Camera92 Camera93 Camera94 Camera95 Camera96 Camera97 Camera98 Camera99 Camera100 Camera101 Camera102 Camera103 Camera104 Camera105}}
+ cameras Camera28
+ addUserKnob {22 IsolateCamera -STARTLINE T "targetnode = nuke.toNode('MergeMat'+nuke.thisGroup()\['cameras'].value().strip('Camera'))\ntargetnode2 = nuke.toNode(nuke.thisGroup()\['cameras'].value())\nresetFlag = True\nfor node in nuke.thisGroup().nodes():\n    if 'MergeMat' in node.name() or 'Camera' in node.name():\n        if targetnode\['disable'].value() == False and nuke.thisGroup()\['isolated'].value() == True:\n            node\['disable'].setValue(False)\n            resetFlag = False\n        else:\n            node\['disable'].setValue(True)\nnuke.thisGroup()\['isolated'].setValue(resetFlag)\ntargetnode\['disable'].setValue(False)\ntargetnode2\['disable'].setValue(False)"}
+ addUserKnob {22 OpenCamera -STARTLINE T "nodename = nuke.thisGroup()\['cameras'].value()\nnuke.show(nuke.thisGroup().node(nodename))"}
+}
+ Light {
+  inputs 0
+  translate {-111 500 -899}
+  depthmap_slope_bias 0.01
+  name Point1
+  xpos -1307
+  ypos 378
+ }
+ Constant {
+  inputs 0
+  color {0.862179 0.460351 0 1}
+  name BaseColor
+  xpos -1279
+  ypos 87
+ }
+ NoOp {
+  name TextureOutput
+  xpos -1275
+  ypos 241
+ }
+ ReadGeo2 {
+  all_objects true
+  read_on_each_frame true
+  name ReadGeo1
+  xpos -1275
+  ypos 281
+ }
+ Viewer {
+  frame_range 1001-1100
+  fps 23.97602463
+  viewerProcess None
+  name PhotoScanViewer
+  xpos -1204
+  ypos 686
+ }
+ Axis {
+  inputs 0
+  translate {-168.2704468 308.4397278 292.7187805}
+  rotate {-11.01334963 20.22750619 -3.257367588}
+  uniform_scale 1.01
+  matrix {
+      {1 1 1 1}
+      {0 1 0 0}
+      {0 0 1 0}
+      {0 0 0 1}
+    }
+  name GlobalTransform
+  xpos -800
+  ypos -6
+ }
+end_group
