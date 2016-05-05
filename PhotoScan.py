@@ -1,6 +1,7 @@
 import nuke, math, os, shutil
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
+import PlyReader
 
 def deselectAll():
     for a in nuke.selectedNodes():
@@ -93,6 +94,7 @@ def readProjectFiles(psxFilePath):
     
     chunkZipPath = filesFilePath+'/0/chunk.zip'
     frameZipPath = filesFilePath+'/0/0/frame.zip'
+    modelZipPath = filesFilePath+'/0/0/model/model.zip'
     thumbnailsZipPath = filesFilePath+'/0/0/thumbnails/thumbnails.zip'
     pointcloudZipPath = filesFilePath+'/0/0/point_cloud.1/point_cloud.zip'
     
@@ -105,6 +107,10 @@ def readProjectFiles(psxFilePath):
     frameZip.extractall()
     shutil.move('doc.xml', 'frame.xml')
     
+    modelZip = ZipFile(modelZipPath)
+    modelZip.extractall()
+    modelPath = filesFilePath+'/'+'mesh.ply'
+    
     
     chunktree = ET.parse('chunk.xml')
     chunkroot = chunktree.getroot()
@@ -113,7 +119,7 @@ def readProjectFiles(psxFilePath):
     frameroot = frametree.getroot()
     framecameras = frameroot.find('cameras')
     
-    return chunkroot, frameroot
+    return chunkroot, frameroot, modelPath
     
 def clearScene():
     trashclasses = ['Read', 'Camera', 'MergeMat', 'Project3D', 'Scene']
